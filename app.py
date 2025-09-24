@@ -28,7 +28,7 @@ st.markdown("""
 st.sidebar.title("导航栏")
 script_choice = st.sidebar.radio(
     "请选择要使用的工具:",
-    ('工具一：碳储量', '工具二：防风固沙', '工具三：土壤保持', '工具四：水分保持', '工具五：内插模型')
+    ('工具一：碳储量', '工具二：防风固沙', '工具三：土壤保持', '工具四：水源涵养', '工具五：内插模型')
 )
 # --- 根据选择显示不同的UI界面 ---
 
@@ -236,29 +236,68 @@ elif script_choice == '工具三：土壤保持':
                     st.error("模型运行出错！")
                     st.exception(e)
 
-
-elif script_choice == '工具四：水分保持':
-    st.header("工具四：水分保持")
+elif script_choice == '工具四：水源涵养':
+    st.header("工具四：水源涵养模型")
     # ... 在这里为 task4 添加输入框和按钮 ...
-    st.info("这个工具模拟一个需要选择模型和上传文件的场景。")
+    st.info("产水与水源涵养整合模型")
 
-    # 为 task2 创建参数输入框
-    model_type = st.selectbox("请选择模型类型", ["模型A (SVM)", "模型B (Random Forest)"])
-    uploaded_file = st.file_uploader("请上传你的训练数据 (CSV)", type=['csv'])
-    param_b = st.number_input("请输入数字参数 (Parameter B)", min_value=1, max_value=100, value=10)
-    param_c = st.text_input("请输入字符串参数 (Parameter C)", "world")
-    param_d = st.text_input("请输入字符串参数 (Parameter D)", "apple")
+    with st.form("water_yield_retention_form"):
+        st.subheader("1. InVEST 产水量模型参数")
+        workspace_dir = st.text_input("工作空间目录 (所有结果将保存在此)")
 
-    if st.button("开始训练工具二"):
-        if uploaded_file is not None:
-            with st.spinner(f'正在使用 {model_type} 进行训练...'):
-                # 这里我们假设 task2.run 接受文件内容和模型名
-                # result = task2.run(file_content=uploaded_file.getvalue(), model=model_type)
-                st.success("模拟训练完成！")
-                st.balloons()  # 来点庆祝
+        col1, col2 = st.columns(2)
+        with col1:
+            lulc_path = st.text_input("土地利用/覆盖数据 (.tif)")
+            depth_to_root_rest_layer_path = st.text_input("土壤深度数据 (.tif)")
+            precipitation_path = st.text_input("降水量数据 (.tif)")
+            eto_path = st.text_input("参考蒸散发数据 (.tif)")
+        with col2:
+            pawc_path = st.text_input("植物有效含水量数据 (.tif)")
+            watersheds_path = st.text_input("流域矢量数据 (.shp)")
+            biophysical_table_path = st.text_input("生物物理参数表 (.csv)")
+            seasonality_constant = st.number_input("季节性参数 Z (整数)", min_value=1, max_value=30, value=5)
+
+        st.subheader("2. 水源涵养量计算参数")
+        col3, col4 = st.columns(2)
+        with col3:
+            c1_path = st.text_input("黏粒含量数据 C1 (.tif)")
+            c2_path = st.text_input("沙粒含量数据 C2 (.tif)")
+        with col4:
+            v_path = st.text_input("流速速率数据 V (.tif)")
+            t_path = st.text_input("地形指数数据 T1 (.tif)")
+
+        submitted = st.form_submit_button("开始运行完整工作流")
+
+    if submitted:
+        # 基本的输入验证
+        all_inputs = [workspace_dir, lulc_path, depth_to_root_rest_layer_path,
+                      precipitation_path, eto_path, pawc_path, watersheds_path,
+                      biophysical_table_path, c1_path, c2_path, v_path, t_path]
+        if not all(all_inputs):
+            st.error("错误：请确保所有输入框都已填写！")
         else:
-            st.warning("请先上传文件！")
-
+            with st.spinner("正在执行多步骤工作流，过程较长，请耐心等待..."):
+                try:
+                    # 只需调用一个函数，传入所有参数
+                    result_message = water_conservation.run(
+                        workspace_dir=workspace_dir,
+                        lulc_path=lulc_path,
+                        depth_to_root_rest_layer_path=depth_to_root_rest_layer_path,
+                        precipitation_path=precipitation_path,
+                        eto_path=eto_path,
+                        pawc_path=pawc_path,
+                        watersheds_path=watersheds_path,
+                        biophysical_table_path=biophysical_table_path,
+                        seasonality_constant=seasonality_constant,
+                        c1_path=c1_path,
+                        c2_path=c2_path,
+                        v_path=v_path,
+                        t_path=t_path
+                    )
+                    st.success(result_message)
+                except Exception as e:
+                    st.error("工作流运行出错！")
+                    st.exception(e)  # 打印详细的错误堆栈信息
 # --- 模块五 ---
 elif script_choice == '工具五：内插模型':
     st.header("工具五：内插模型")
