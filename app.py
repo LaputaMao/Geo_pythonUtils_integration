@@ -4,12 +4,12 @@ from scripts import soil_conservation, sand_break, carbon_storage, water_conserv
 
 # --- 页面基础设置 ---
 st.set_page_config(
-    page_title="Python工具箱",
+    page_title="Python工具模型库",
     page_icon="🛠️",
     layout="centered"
 )
 
-st.title("🛠️ Python 工具箱")
+st.title("🛠️ Python 工具模型库")
 
 # --- 使用侧边栏进行导航 ---
 # 使用 Markdown 和 CSS 控制间距
@@ -168,29 +168,73 @@ elif script_choice == '工具二：防风固沙':
                     st.error("模型运行出错！")
                     st.exception(e)
 
-# --- 为工具三和工具四添加类似的代码块 ---
 elif script_choice == '工具三：土壤保持':
-    st.header("工具三：土壤保持")
+    st.header("工具三：土壤保持 (SDR) 模型")
     # ... 在这里为 task3 添加输入框和按钮 ...
 
-    st.info("这个工具模拟一个需要选择模型和上传文件的场景。")
+    st.info("请输入运行模型所需的各项参数和数据路径。")
 
-    # 为 task2 创建参数输入框
-    model_type = st.selectbox("请选择模型类型", ["模型A (SVM)", "模型B (Random Forest)"])
-    uploaded_file = st.file_uploader("请上传你的训练数据 (CSV)", type=['csv'])
-    param_b = st.number_input("请输入数字参数 (Parameter B)", min_value=1, max_value=100, value=10)
-    param_c = st.text_input("请输入字符串参数 (Parameter C)", "world")
-    param_d = st.text_input("请输入字符串参数 (Parameter D)", "apple")
+    # --- 使用表单来组织所有输入参数 ---
+    with st.form("sdr_form"):
+        st.subheader("必填参数")
+        # 使用分栏让布局更紧凑
+        col1, col2 = st.columns(2)
+        with col1:
+            workspace_dir = st.text_input("工作空间目录")
+            dem_path = st.text_input("DEM 数据路径 (.tif)")
+            lulc_path = st.text_input("土地利用/覆盖数据路径 (.tif)")
+            erodibility_path = st.text_input("土壤可蚀性数据路径 (.tif)")
+            erosivity_path = st.text_input("降雨侵蚀力数据路径 (.tif)")
+        with col2:
+            watersheds_path = st.text_input("流域矢量数据路径 (.shp)")
+            biophysical_table_path = st.text_input("生物物理参数表路径 (.csv)")
+            threshold_flow_accumulation = st.number_input("汇流阈值 (整数)", min_value=1, step=1, value=1000)
+            k_param = st.number_input("k_param (Borselli 校准参数)", format="%.4f", value=2.0)
+            ic_0_param = st.number_input("ic_0_param (植被连接度参数)", format="%.4f", value=0.5)
+            sdr_max = st.number_input("sdr_max (最大泥沙输送比)", format="%.4f", value=0.8)
 
-    if st.button("开始训练工具二"):
-        if uploaded_file is not None:
-            with st.spinner(f'正在使用 {model_type} 进行训练...'):
-                # 这里我们假设 task2.run 接受文件内容和模型名
-                # result = task2.run(file_content=uploaded_file.getvalue(), model=model_type)
-                st.success("模拟训练完成！")
-                st.balloons()  # 来点庆祝
+        st.subheader("可选参数 (留空则不使用)")
+        col3, col4 = st.columns(2)
+        with col3:
+            l_max = st.number_input("l_max (最大坡长)", min_value=0, step=1, value=0)  # 用0表示不填
+            drainage_path = st.text_input("排水路径 (.tif)")
+        with col4:
+            lulc_path_bare_soil = st.text_input("裸土土地利用路径 (.tif)")
+
+        # 表单的提交按钮
+        submitted = st.form_submit_button("开始运行模型")
+
+    # --- 当用户点击按钮后执行 ---
+    if submitted:
+        # 输入验证
+        required_paths = [workspace_dir, dem_path, lulc_path, erodibility_path, erosivity_path, watersheds_path,
+                          biophysical_table_path]
+        if not all(required_paths):
+            st.error("错误：请确保所有必填参数的路径都已填写！")
         else:
-            st.warning("请先上传文件！")
+            with st.spinner("模型正在运行，请稍候..."):
+                try:
+                    # 调用我们重构后的 sdr_model.run 函数
+                    result_message = soil_conservation.run(
+                        workspace_dir=workspace_dir,
+                        dem_path=dem_path,
+                        lulc_path=lulc_path,
+                        erodibility_path=erodibility_path,
+                        erosivity_path=erosivity_path,
+                        watersheds_path=watersheds_path,
+                        biophysical_table_path=biophysical_table_path,
+                        threshold_flow_accumulation=threshold_flow_accumulation,
+                        k_param=k_param,
+                        ic_0_param=ic_0_param,
+                        sdr_max=sdr_max,
+                        l_max=l_max if l_max > 0 else None,  # 如果用户填0或不填，则传递None
+                        drainage_path=drainage_path or None,
+                        lulc_path_bare_soil=lulc_path_bare_soil or None
+                    )
+                    st.success(result_message)
+                except Exception as e:
+                    st.error("模型运行出错！")
+                    st.exception(e)
 
 
 elif script_choice == '工具四：水分保持':
