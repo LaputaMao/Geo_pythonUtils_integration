@@ -327,7 +327,7 @@
 
 # app.py
 import streamlit as st
-from scripts import soil_conservation, sand_break, carbon_storage, water_conservation  # 从scripts文件夹导入你的脚本模块
+from scripts import soil_conservation, sand_break, carbon_storage, water_conservation, Anuspin  # 从scripts文件夹导入你的脚本模块
 import os
 
 
@@ -758,3 +758,61 @@ elif script_choice == '模型四：水源涵养':
                 except Exception as e:
                     st.error("工作流运行出错！")
                     st.exception(e)
+
+elif script_choice == '模型五：内插模型':
+    st.header("模型五：ANUSPLIN 插值模型")
+    st.info("此模型通过调用 ANUSPLIN 程序对工作目录下的所有 .dat 文件进行批量插值。")
+
+    # 增加一个醒目的警告框，告知用户前置条件
+    st.warning(
+        "**开始运行前请确保:**\n"
+        "1. 您已正确安装 ANUSPLIN 4.4 或更高版本。\n"
+        "2. `splina.exe` 和 `lapgrd.exe` 这两个可执行文件已经复制到下方指定的工作目录中。\n"
+        "3. 所有待处理的 `.dat` 文件和高程 `.txt` 文件也已经放置在同一个工作目录中。"
+    )
+
+    with st.form("interpolation_form"):
+        st.subheader("参数配置")
+
+        # 修改点：所有参数都在UI中由用户指定
+        work_dir = st.text_input("1. 工作目录")
+        st.info("请复制并粘贴包含 .exe, .dat 和 dem.txt 文件的文件夹的完整路径。")
+
+        dem_txt_filename = st.text_input("2. 高程DEM Txt文件名")
+
+        data_format = st.text_input("3. 输入数据格式 (Data Format String)", "示例格式 : (A6,2F11.4,F9.2,F8.2)")
+
+        st.subheader("数值参数")
+        col1, col2 = st.columns(2)
+        with col1:
+            elev_range_min = st.number_input("4. 高程范围 (最小值)", value=-400)
+            max_data_points = st.number_input("5. 插值站点最大数量", min_value=1, step=1, value=500)
+        with col2:
+            elev_range_max = st.number_input("高程范围 (最大值)", value=9000)
+            station_id_digits = st.number_input("6. 台站号数字位数", min_value=1, step=1, value=5)
+
+        submitted = st.form_submit_button("开始运行插值")
+
+    if submitted:
+        # 输入验证
+        if not all([work_dir, dem_txt_filename, data_format]):
+            st.error("错误：请确保工作目录、DEM文件名和数据格式都已填写！")
+        else:
+            with st.spinner("正在调用ANUSPLIN执行批量插值，请稍候..."):
+                try:
+                    # 将高程范围组合成元组
+                    elev_range = (elev_range_min, elev_range_max)
+
+                    # 调用重构后的模型函数
+                    result_message = Anuspin.run(
+                        work_dir=work_dir,
+                        dem_txt_filename=dem_txt_filename,
+                        elev_range=elev_range,
+                        data_format=data_format,
+                        max_data_points=max_data_points,
+                        station_id_digits=station_id_digits
+                    )
+                    st.success(result_message)
+                except Exception as e:
+                    st.error("模型运行出错！")
+                    st.exception(e)  # 打印详细错误信息，便于调试
