@@ -90,62 +90,63 @@ import os
 from natcap.invest.sdr import sdr
 
 
-# def run(workspace_dir: str,
-#         dem_path: str,
-#         lulc_path: str,
-#         erodibility_path: str,
-#         erosivity_path: str,
-#         watersheds_path: str,
-#         biophysical_table_path: str,
-#         threshold_flow_accumulation: int,
-#         k_param: float,
-#         ic_0_param: float,
-#         sdr_max: float,
-#         l_max: int = None,
-#         drainage_path: str = None,
-#         lulc_path_bare_soil: str = None):
-def run():
+def run(workspace_dir: str,
+        dem_path: str,
+        lulc_path: str,
+        erodibility_path: str,
+        erosivity_path: str,
+        watersheds_path: str,
+        biophysical_table_path: str,
+        threshold_flow_accumulation: int,
+        k_param: float,
+        ic_0_param: float,
+        sdr_max: float,
+        l_max: float = 100.0,
+        # drainage_path: str = None,
+        # lulc_path_bare_soil: str = None
+        ):
+    # def run():
     """
     运行 InVEST 水土保持 (SDR) 模型的核心逻辑函数。
     """
-    # # 1. 定义模型参数字典
-    # args = {
-    #     'workspace_dir': workspace_dir,
-    #     'results_suffix': '',
-    #     'dem_path': dem_path,
-    #     'lulc_path': lulc_path,
-    #     'erodibility_path': erodibility_path,
-    #     'erosivity_path': erosivity_path,
-    #     'watersheds_path': watersheds_path,
-    #     'biophysical_table_path': biophysical_table_path,
-    #     'threshold_flow_accumulation': threshold_flow_accumulation,
-    #     'k_param': k_param,
-    #     'ic_0_param': ic_0_param,
-    #     'sdr_max': sdr_max,
-    #     'l_max': l_max,
-    #     'drainage_path': drainage_path,
-    #     'lulc_path_bare_soil': lulc_path_bare_soil,
-    # }
-
-    workspace_dir = "E:\项目\环境监测院\OutPut1"
-
+    # 1. 定义模型参数字典
     args = {
-        'workspace_dir': "E:\项目\环境监测院\OutPut1",
+        'workspace_dir': workspace_dir,
         'results_suffix': '',
-        'dem_path': "E:\项目\环境监测院\水土保持数据\Shuozhou_30m_reprojected.tif",
-        'lulc_path': "E:\项目\环境监测院\水土保持数据\shuozhou2023_LULC_reprojected.tif",
-        'erodibility_path': "E:\项目\环境监测院\水土保持数据\SE.tif",  # soil_erosion_path
-        'erosivity_path': "E:\项目\环境监测院\水土保持数据\REI_30m.tif",  # rainfall_erosivity_index_path
-        'watersheds_path': "E:\项目\环境监测院\水土保持数据\朔州市_reprojected.shp",
-        'biophysical_table_path': "E:\项目\环境监测院\水土保持数据\soil_density.csv",
-        'threshold_flow_accumulation': 1000,
-        'k_param': 0.2,
-        'ic_0_param': 0.5,
-        'sdr_max': 0.8,
-        'l_max': None,
-        'drainage_path': None,
-        'lulc_path_bare_soil': None,
+        'dem_path': dem_path,
+        'lulc_path': lulc_path,
+        'erodibility_path': erodibility_path,
+        'erosivity_path': erosivity_path,
+        'watersheds_path': watersheds_path,
+        'biophysical_table_path': biophysical_table_path,
+        'threshold_flow_accumulation': threshold_flow_accumulation,
+        'k_param': k_param,
+        'ic_0_param': ic_0_param,
+        'sdr_max': sdr_max,
+        'l_max': l_max,
+        # 'drainage_path': drainage_path,
+        # 'lulc_path_bare_soil': lulc_path_bare_soil,
     }
+
+    # workspace_dir = "E:\项目\环境监测院\OutPut1"
+    #
+    # args = {
+    #     'workspace_dir': "E:\项目\环境监测院\OutPut1",
+    #     'results_suffix': '',
+    #     'dem_path': "E:\项目\环境监测院\水土保持数据\Shuozhou_30m_reprojected.tif",
+    #     'lulc_path': "E:\项目\环境监测院\水土保持数据\shuozhou2023_LULC_reprojected.tif",
+    #     'erodibility_path': "E:\项目\环境监测院\水土保持数据\SE.tif",  # soil_erosion_path
+    #     'erosivity_path': "E:\项目\环境监测院\水土保持数据\REI_30m.tif",  # rainfall_erosivity_index_path
+    #     'watersheds_path': "E:\项目\环境监测院\水土保持数据\朔州市_reprojected.shp",
+    #     'biophysical_table_path': "E:\项目\环境监测院\水土保持数据\soil_density.csv",
+    #     'threshold_flow_accumulation': 1000,
+    #     'k_param': 0.2,
+    #     'ic_0_param': 0.5,
+    #     'sdr_max': 0.8,
+    #     'l_max': None,
+    #     'drainage_path': None,
+    #     'lulc_path_bare_soil': None,
+    # }
 
     # 2. 删除值为 None 或空字符串的可选参数
     args = {k: v for k, v in args.items() if v is not None and v != ''}
@@ -161,5 +162,5 @@ def run():
     return f"水土保持模型运行成功！结果已保存在目录: {workspace_dir}"
 
 # 同样，我们删除了整个 if __name__ == "__main__": 部分。
-if __name__ == "__main__":
-    run()
+# if __name__ == "__main__":
+#     run()

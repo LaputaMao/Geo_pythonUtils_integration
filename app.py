@@ -327,8 +327,11 @@
 
 # app.py
 import streamlit as st
-from scripts import soil_conservation, sand_break, carbon_storage, water_conservation, Anuspin  # 从scripts文件夹导入你的脚本模块
+from scripts import soil_conservation, sand_break, carbon_storage, water_conservation_0814, \
+    Anuspin  # 从scripts文件夹导入你的脚本模块
 import os
+
+os.environ['USE_PATH_FOR_GDAL_PYTHON'] = 'YES'
 
 
 # --- 辅助函数 ---
@@ -385,7 +388,7 @@ st.markdown("""
 st.sidebar.title("生态系统服务功能模型")
 script_choice = st.sidebar.radio(
     "请选择要使用的模型:",
-    ('模型一：碳储量', '模型二：防风固沙', '模型三：土壤保持', '模型四：水源涵养', '模型五：内插模型')
+    ('模型一：碳储量', '模型二：防风固沙', '模型三：水土保持', '模型四：水源涵养', '模型五：内插模型')
 )
 # --- 根据选择显示不同的UI界面 ---
 
@@ -396,13 +399,13 @@ if script_choice == '模型一：碳储量':
     with st.form("carbon_form"):
         st.subheader("必填参数")
         # 修改点2: 目录选择保留文本输入，并增加提示信息
-        workspace_dir = st.text_input("1. 工作空间目录 (存放结果的文件夹路径)", "E:\项目\环境监测院\OutPut")
+        workspace_dir = st.text_input("1. 工作空间目录 (存放结果的文件夹路径)", "E:\项目\环境监测院\OutPut\Carbon")
         st.info(
             "选择文件夹可能会暴露您计算机的文件系统结构,导致数据泄露,处于安全考虑请复制并粘贴一个本地文件夹的完整路径，例如：`D:/GIS_Project/Carbon_Results`")
 
         # 修改点1: 文件路径输入改为文件上传组件
         lulc_cur_path_uploader = st.file_uploader("2. 当前土地利用/覆盖数据 (.tif)", type=['tif', 'tiff'])
-        carbon_pools_path_uploader = st.file_uploader("3. 碳库路径 (.csv)", type=['csv'])
+        carbon_pools_path_uploader = st.file_uploader("3. 碳库数据表 (.csv)", type=['csv'])
 
         st.subheader("可选参数")
         lulc_fut_path_uploader = st.file_uploader("4. 未来土地利用/覆盖数据路径 (.tif, 用于计算固碳量)",
@@ -453,7 +456,7 @@ elif script_choice == '模型二：防风固沙':
 
     with st.form("sand_break_form"):
         st.subheader("1. 输出与基本参数")
-        output_folder = st.text_input("结果输出文件夹路径", "E:\项目\环境监测院\OutPut")
+        output_folder = st.text_input("结果输出文件夹路径", "E:\项目\环境监测院\OutPut\SandBreak")
         st.info(
             "选择文件夹可能会暴露您计算机的文件系统结构,导致数据泄露,处于安全考虑请复制并粘贴一个本地文件夹的完整路径，例如：`D:/GIS_Project/Sand_Break_Results`")
 
@@ -486,6 +489,7 @@ elif script_choice == '模型二：防风固沙':
 
         # 修改点3: 实现可切换的输入模式
         st.subheader("3. 特殊参数 (ρ 和 g)")
+        st.info("由于网络原因请切换导入类型后点击[确认更改格式]更改导入类型")
 
         # rho_option = st.radio("空气密度 ρ (rho)", ["输入常数值", "使用TIF文件"], horizontal=True, key="rho_radio")
         # if rho_option == "输入常数值":
@@ -543,7 +547,7 @@ elif script_choice == '模型二：防风固沙':
         else:
             g_uploader = st.file_uploader("上传 g 的TIF文件", type=['tif', 'tiff'], key="g_uploader")
             g_input = None
-
+        st.form_submit_button("确认更改格式")
         submitted = st.form_submit_button("开始运行模型")
 
     if submitted:
@@ -583,16 +587,16 @@ elif script_choice == '模型二：防风固沙':
                     st.error("模型运行出错！")
                     st.exception(e)
 
-elif script_choice == '模型三：土壤保持':
-    st.header("模型三：土壤保持 (SDR) 模型")
-    st.info(
-        "选择文件夹可能会暴露您计算机的文件系统结构,导致数据泄露,处于安全考虑请输入运行模型所需的各项参数和数据路径。")
+elif script_choice == '模型三：水土保持':
+    st.header("模型三：水土保持 (SDR) 模型")
+    # st.info(
+    #     "选择文件夹可能会暴露您计算机的文件系统结构,导致数据泄露,处于安全考虑请输入运行模型所需的各项参数和数据路径。")
 
     with st.form("sdr_form"):
         st.subheader("必填参数")
         col1, col2 = st.columns(2)
         with col1:
-            workspace_dir = st.text_input("工作空间目录", "E:\项目\环境监测院\OutPut")
+            workspace_dir = st.text_input("工作空间目录", "E:\项目\环境监测院\OutPut\SoilCon")
             st.info("所有结果将保存在此目录下。")
             dem_path_uploader = st.file_uploader("DEM 数据 (.tif)", type=['tif', 'tiff'])
             lulc_path_uploader = st.file_uploader("土地利用/覆盖数据 (.tif)", type=['tif', 'tiff'])
@@ -605,17 +609,18 @@ elif script_choice == '模型三：土壤保持':
             st.warning("请务必将 .shp, .shx, .dbf 等所有相关文件一同选中并上传。")
             biophysical_table_path_uploader = st.file_uploader("生物物理参数表 (.csv)", type=['csv'])
             threshold_flow_accumulation = st.number_input("汇流阈值 (整数)", min_value=1, step=1, value=1000)
-            k_param = st.number_input("k_param (Borselli 校准参数)", format="%.4f", value=2.0)
+            k_param = st.number_input("k_param (Borselli 校准参数)", format="%.4f", value=0.2)
             ic_0_param = st.number_input("ic_0_param (植被连接度参数)", format="%.4f", value=0.5)
             sdr_max = st.number_input("sdr_max (最大泥沙输送比)", format="%.4f", value=0.8)
+            l_max = st.number_input("l_max (最大坡长)", format="%.4f", value=100.0)
 
-        st.subheader("可选参数 (留空则不使用)")
-        col3, col4 = st.columns(2)
-        with col3:
-            l_max = st.number_input("l_max (最大坡长)", min_value=0, step=1, value=0)  # 用0表示不填
-            drainage_path_uploader = st.file_uploader("排水路径 (.tif)", type=['tif', 'tiff'])
-        with col4:
-            lulc_path_bare_soil_uploader = st.file_uploader("裸土土地利用路径 (.tif)", type=['tif', 'tiff'])
+        # st.subheader("可选参数 (留空则不使用)")
+        # col3, col4 = st.columns(2)
+        # with col3:
+        # 用0表示不填
+        #     drainage_path_uploader = st.file_uploader("排水路径 (.tif)", type=['tif', 'tiff'])
+        # with col4:
+        #     lulc_path_bare_soil_uploader = st.file_uploader("裸土土地利用路径 (.tif)", type=['tif', 'tiff'])
 
         submitted = st.form_submit_button("开始运行模型")
 
@@ -635,8 +640,8 @@ elif script_choice == '模型三：土壤保持':
                     erodibility_path = save_uploaded_file(erodibility_path_uploader, upload_save_dir)
                     erosivity_path = save_uploaded_file(erosivity_path_uploader, upload_save_dir)
                     biophysical_table_path = save_uploaded_file(biophysical_table_path_uploader, upload_save_dir)
-                    drainage_path = save_uploaded_file(drainage_path_uploader, upload_save_dir)
-                    lulc_path_bare_soil = save_uploaded_file(lulc_path_bare_soil_uploader, upload_save_dir)
+                    # drainage_path = save_uploaded_file(drainage_path_uploader, upload_save_dir)
+                    # lulc_path_bare_soil = save_uploaded_file(lulc_path_bare_soil_uploader, upload_save_dir)
 
                     # 特殊处理Shapefile
                     watersheds_path = None
@@ -661,8 +666,8 @@ elif script_choice == '模型三：土壤保持':
                         ic_0_param=ic_0_param,
                         sdr_max=sdr_max,
                         l_max=l_max if l_max > 0 else None,
-                        drainage_path=drainage_path,
-                        lulc_path_bare_soil=lulc_path_bare_soil
+                        # drainage_path=drainage_path,
+                        # lulc_path_bare_soil=lulc_path_bare_soil
                     )
                     st.success(result_message)
                 except Exception as e:
@@ -671,52 +676,61 @@ elif script_choice == '模型三：土壤保持':
 
 elif script_choice == '模型四：水源涵养':
     st.header("模型四：水源涵养模型")
-    st.info("产水与水源涵养整合模型")
+    st.info("通过文件上传替代路径输入，操作更便捷，同时保护您的文件系统隐私。")
 
-    with st.form("water_yield_retention_form"):
-        st.subheader("1. InVEST 产水量模型参数")
-        workspace_dir = st.text_input("工作空间目录 (所有结果将保存在此)", "E:\项目\环境监测院\OutPut")
-        st.info(
-            "选择文件夹可能会暴露您计算机的文件系统结构,导致数据泄露,处于安全考虑请复制并粘贴一个本地文件夹的完整路径。")
+    with st.form("awy_form"):
+        st.subheader("1. 基础输入文件")
+        # 工作空间目录仍然需要用户输入，因为所有上传的文件和最终结果都需要一个根目录
+        workspace_dir = st.text_input("工作空间目录 (用于存放上传文件和模型结果)",
+                                      "E:\\项目\\环境监测院\\OutPut\\WaterYield")
+        st.info("所有上传的文件和模型结果都将保存在此目录下。")
 
         col1, col2 = st.columns(2)
         with col1:
             lulc_path_uploader = st.file_uploader("土地利用/覆盖数据 (.tif)", type=['tif', 'tiff'])
-            depth_to_root_rest_layer_path_uploader = st.file_uploader("土壤深度数据 (.tif)", type=['tif', 'tiff'])
+            depth_to_root_rest_layer_path_uploader = st.file_uploader("土壤厚度数据 (.tif)", type=['tif', 'tiff'])
             precipitation_path_uploader = st.file_uploader("降水量数据 (.tif)", type=['tif', 'tiff'])
-            eto_path_uploader = st.file_uploader("参考蒸散发数据 (.tif)", type=['tif', 'tiff'])
+            eto_path_uploader = st.file_uploader("蒸散发数据 (.tif)", type=['tif', 'tiff'])
         with col2:
             pawc_path_uploader = st.file_uploader("植物有效含水量数据 (.tif)", type=['tif', 'tiff'])
-            watersheds_path_uploader = st.file_uploader("流域矢量数据 (.shp)", type=['shp', 'shx', 'dbf', 'prj'],
+            # 特殊处理Shapefile，允许用户一次性上传多个相关文件
+            watersheds_path_uploader = st.file_uploader("流域矢量数据 (.shp)", type=['shp', 'shx', 'dbf', 'prj', 'cpg'],
                                                         accept_multiple_files=True)
             st.warning("请务必将 .shp, .shx, .dbf 等所有相关文件一同选中并上传。")
             biophysical_table_path_uploader = st.file_uploader("生物物理参数表 (.csv)", type=['csv'])
-            seasonality_constant = st.number_input("季节性参数 Z", min_value=1.0, max_value=30.0, value=5.0, step=0.1)
 
-        st.subheader("2. 水源涵养量计算参数")
-        col3, col4 = st.columns(2)
+        st.subheader("2. 模型校准参数")
+        col3, col4, col5, col6 = st.columns(4)
         with col3:
-            c1_path_uploader = st.file_uploader("黏粒含量数据 C1 (.tif)", type=['tif', 'tiff'])
-            c2_path_uploader = st.file_uploader("沙粒含量数据 C2 (.tif)", type=['tif', 'tiff'])
+            seasonality_constant = st.number_input("季节性参数 (Z)", value=5.0, format="%.2f")
         with col4:
-            v_path_uploader = st.file_uploader("流速速率数据 V (.tif)", type=['tif', 'tiff'])
-            t_path_uploader = st.file_uploader("地形指数数据 T1 (.tif)", type=['tif', 'tiff'])
+            alpha_m = st.number_input("alpha_m", value=1.0 / 12.0, format="%.4f")
+        with col5:
+            beta_i = st.number_input("beta_i", value=1.0, format="%.4f")
+        with col6:
+            gamma = st.number_input("gamma", value=1.0, format="%.4f")
 
-        submitted = st.form_submit_button("开始运行完整工作流")
+        submitted = st.form_submit_button("开始运行水源涵养模型")
 
     if submitted:
-        all_uploads = [workspace_dir, lulc_path_uploader, depth_to_root_rest_layer_path_uploader,
-                       precipitation_path_uploader, eto_path_uploader, pawc_path_uploader, watersheds_path_uploader,
-                       biophysical_table_path_uploader, c1_path_uploader, c2_path_uploader, v_path_uploader,
-                       t_path_uploader]
-        if not all(all_uploads):
-            st.error("错误：请确保所有输入框都已填写！")
+        # 验证所有必需的文件是否都已上传
+        required_uploads = [
+            lulc_path_uploader, depth_to_root_rest_layer_path_uploader,
+            precipitation_path_uploader, eto_path_uploader, pawc_path_uploader,
+            watersheds_path_uploader, biophysical_table_path_uploader
+        ]
+        if not all(required_uploads):
+            st.error("错误：请确保所有标记为必填的基础输入文件都已上传！")
+        elif not workspace_dir:
+            st.error("错误：请输入一个有效的工作空间目录！")
         else:
-            with st.spinner("正在执行多步骤工作流，过程较长，请耐心等待..."):
+            with st.spinner("正在准备文件并运行模型，请稍候..."):
                 try:
+                    # 创建一个专门用于存放上传文件的子目录，保持整洁
                     upload_save_dir = os.path.join(workspace_dir, "uploaded_files")
+                    os.makedirs(upload_save_dir, exist_ok=True)
 
-                    # 保存所有文件
+                    # 1. 保存所有单文件上传
                     lulc_path = save_uploaded_file(lulc_path_uploader, upload_save_dir)
                     depth_to_root_rest_layer_path = save_uploaded_file(depth_to_root_rest_layer_path_uploader,
                                                                        upload_save_dir)
@@ -724,22 +738,23 @@ elif script_choice == '模型四：水源涵养':
                     eto_path = save_uploaded_file(eto_path_uploader, upload_save_dir)
                     pawc_path = save_uploaded_file(pawc_path_uploader, upload_save_dir)
                     biophysical_table_path = save_uploaded_file(biophysical_table_path_uploader, upload_save_dir)
-                    c1_path = save_uploaded_file(c1_path_uploader, upload_save_dir)
-                    c2_path = save_uploaded_file(c2_path_uploader, upload_save_dir)
-                    v_path = save_uploaded_file(v_path_uploader, upload_save_dir)
-                    t_path = save_uploaded_file(t_path_uploader, upload_save_dir)
 
-                    # 特殊处理Shapefile
+                    # 2. 特殊处理Shapefile的多文件上传
                     watersheds_path = None
                     if watersheds_path_uploader:
                         main_shp_path = None
-                        for f in watersheds_path_uploader:
-                            saved_path = save_uploaded_file(f, upload_save_dir)
+                        for uploaded_file in watersheds_path_uploader:
+                            saved_path = save_uploaded_file(uploaded_file, upload_save_dir)
+                            # 找到主 .shp 文件，将其路径作为模型的输入
                             if saved_path and saved_path.lower().endswith('.shp'):
                                 main_shp_path = saved_path
+                        if main_shp_path is None:
+                            st.error("错误：上传的流域矢量文件中未找到 .shp 主文件！")
+                            st.stop()  # 终止执行
                         watersheds_path = main_shp_path
 
-                    result_message = water_conservation.run(
+                    # 3. 调用模型核心函数
+                    result_message = water_conservation_0814.run(
                         workspace_dir=workspace_dir,
                         lulc_path=lulc_path,
                         depth_to_root_rest_layer_path=depth_to_root_rest_layer_path,
@@ -749,15 +764,78 @@ elif script_choice == '模型四：水源涵养':
                         watersheds_path=watersheds_path,
                         biophysical_table_path=biophysical_table_path,
                         seasonality_constant=seasonality_constant,
-                        c1_path=c1_path,
-                        c2_path=c2_path,
-                        v_path=v_path,
-                        t_path=t_path
+                        alpha_m=alpha_m,
+                        beta_i=beta_i,
+                        gamma=gamma
                     )
                     st.success(result_message)
+                    st.balloons()
+
                 except Exception as e:
-                    st.error("工作流运行出错！")
+                    st.error("模型运行出错！")
                     st.exception(e)
+
+# elif script_choice == '模型四：水源涵养':
+#     st.header("InVEST 产水量模型")
+#     st.info("此模型用于计算年产水量，并提供了高级校准参数。")
+#
+#     with st.form("awy_form"):
+#         st.subheader("1. 基础输入文件")
+#         workspace_dir = st.text_input("工作空间目录 (所有结果将保存在此)")
+#
+#         col1, col2 = st.columns(2)
+#         with col1:
+#             lulc_path = st.text_input("土地利用/覆盖数据 (.tif)")
+#             depth_to_root_rest_layer_path = st.text_input("土壤深度数据 (.tif)")
+#             precipitation_path = st.text_input("降水量数据 (.tif)")
+#             eto_path = st.text_input("参考蒸散发数据 (.tif)")
+#         with col2:
+#             pawc_path = st.text_input("植物有效含水量数据 (.tif)")
+#             watersheds_path = st.text_input("流域矢量数据 (.shp)")
+#             biophysical_table_path = st.text_input("生物物理参数表 (.csv)")
+#
+#         st.subheader("2. 模型校准参数")
+#         col3, col4, col5, col6 = st.columns(4)
+#         with col3:
+#             seasonality_constant = st.number_input("季节性参数 (Z)", value=5.0, format="%.2f")
+#         with col4:
+#             alpha_m = st.number_input("alpha_m", value=1.0 / 12.0, format="%.4f")
+#         with col5:
+#             beta_i = st.number_input("beta_i", value=1.0, format="%.4f")
+#         with col6:
+#             gamma = st.number_input("gamma", value=1.0, format="%.4f")
+#
+#         submitted = st.form_submit_button("开始运行产水量模型")
+#
+#     if submitted:
+#         # 输入验证
+#         required_paths = [workspace_dir, lulc_path, depth_to_root_rest_layer_path,
+#                           precipitation_path, eto_path, pawc_path, watersheds_path,
+#                           biophysical_table_path]
+#         if not all(required_paths):
+#             st.error("错误：请确保所有基础输入文件的路径都已填写！")
+#         else:
+#             with st.spinner("产水量模型正在运行，请稍候..."):
+#                 try:
+#                     # 调用重构后的函数，传入所有从UI获取的参数
+#                     result_message = water_conservation_0814.run(
+#                         workspace_dir=workspace_dir,
+#                         lulc_path=lulc_path,
+#                         depth_to_root_rest_layer_path=depth_to_root_rest_layer_path,
+#                         precipitation_path=precipitation_path,
+#                         eto_path=eto_path,
+#                         pawc_path=pawc_path,
+#                         watersheds_path=watersheds_path,
+#                         biophysical_table_path=biophysical_table_path,
+#                         seasonality_constant=seasonality_constant,
+#                         alpha_m=alpha_m,
+#                         beta_i=beta_i,
+#                         gamma=gamma
+#                     )
+#                     st.success(result_message)
+#                 except Exception as e:
+#                     st.error("模型运行出错！")
+#                     st.exception(e)
 
 elif script_choice == '模型五：内插模型':
     st.header("模型五：ANUSPLIN 插值模型")
