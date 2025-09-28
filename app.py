@@ -423,7 +423,7 @@ if script_choice == '模型一：碳储量':
         if not all([workspace_dir, lulc_cur_path_uploader, carbon_pools_path_uploader]):
             st.error("错误：请确保所有必填参数（1, 2, 3）都已填写！")
         else:
-            with st.spinner("模型正在运行，这可能需要几分钟，请不要关闭页面..."):
+            with st.spinner("模型正在运行，根据数据大小需要花费几分钟到一小时，请不要离开此页面页面..."):
                 try:
                     # 在工作空间内创建一个专门存放上传文件的子目录
                     upload_save_dir = os.path.join(workspace_dir, "uploaded_files")
@@ -554,7 +554,7 @@ elif script_choice == '模型二：防风固沙':
         if not output_folder:
             st.error("错误：请必须填写结果输出文件夹路径！")
         else:
-            with st.spinner("模型正在运行，参数较多，请耐心等待..."):
+            with st.spinner("模型正在运行，根据数据大小需要花费几分钟到一小时，请不要离开此页面页面..."):
                 try:
                     upload_save_dir = os.path.join(output_folder, "uploaded_files")
 
@@ -583,6 +583,7 @@ elif script_choice == '模型二：防风固沙':
                         K_path=K_path, C_path=C_path
                     )
                     st.success(result_message)
+                    st.balloons()
                 except Exception as e:
                     st.error("模型运行出错！")
                     st.exception(e)
@@ -630,7 +631,7 @@ elif script_choice == '模型三：水土保持':
         if not all(required_uploads):
             st.error("错误：请确保所有必填参数的路径都已填写！")
         else:
-            with st.spinner("模型正在运行，请稍候..."):
+            with st.spinner("模型正在运行，根据数据大小需要花费几分钟到一小时，请不要离开此页面页面..."):
                 try:
                     upload_save_dir = os.path.join(workspace_dir, "uploaded_files")
 
@@ -670,6 +671,7 @@ elif script_choice == '模型三：水土保持':
                         # lulc_path_bare_soil=lulc_path_bare_soil
                     )
                     st.success(result_message)
+                    st.balloons()
                 except Exception as e:
                     st.error("模型运行出错！")
                     st.exception(e)
@@ -724,7 +726,7 @@ elif script_choice == '模型四：水源涵养':
         elif not workspace_dir:
             st.error("错误：请输入一个有效的工作空间目录！")
         else:
-            with st.spinner("正在准备文件并运行模型，请稍候..."):
+            with st.spinner("模型正在运行，根据数据大小需要花费几分钟到一小时，请不要离开此页面页面..."):
                 try:
                     # 创建一个专门用于存放上传文件的子目录，保持整洁
                     upload_save_dir = os.path.join(workspace_dir, "uploaded_files")
@@ -876,7 +878,7 @@ elif script_choice == '模型五：内插模型':
         if not all([work_dir, dem_txt_filename, data_format]):
             st.error("错误：请确保工作目录、DEM文件名和数据格式都已填写！")
         else:
-            with st.spinner("正在调用ANUSPLIN执行批量插值，请稍候..."):
+            with st.spinner("模型正在运行，根据数据大小需要花费几分钟到一小时，请不要离开此页面页面..."):
                 try:
                     # 将高程范围组合成元组
                     elev_range = (elev_range_min, elev_range_max)
@@ -891,6 +893,7 @@ elif script_choice == '模型五：内插模型':
                         station_id_digits=station_id_digits
                     )
                     st.success(result_message)
+                    st.balloons()
                 except Exception as e:
                     st.error("模型运行出错！")
                     st.exception(e)  # 打印详细错误信息，便于调试

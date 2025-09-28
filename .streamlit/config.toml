@@ -1,2 +1,13 @@
 [server]
 maxUploadSize = 2048  # 1024MB = 1GB
+
+[general]
+# 阻止 Streamlit 在首次运行时要求输入邮箱
+# 0: 永不提示
+# 1: 仅在首次运行时提示 (默认行为)
+# 2: 总是提示 (不常用)
+email = ""
+disableStatusBar = false
+
+[browser]
+gatherUsageStats = false
