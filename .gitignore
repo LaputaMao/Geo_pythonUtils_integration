@@ -1,0 +1,7 @@
+# ignore conda envs
+PythonUtils/
+Python_package/
+
+# ignore idea config
+.idea/
+
